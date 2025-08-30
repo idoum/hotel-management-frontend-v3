@@ -1,28 +1,40 @@
 /**
  * @file app/page.tsx
- * @description Accueil sobre: 9 modules en cartes.
+ * @description Accueil contextuel: si connecte -> cartes modules; sinon -> texte explicatif.
  */
 
-import ModuleCard from '@/components/ModuleCard';
+"use client";
+
+import { useSession } from "@/context/SessionContext";
+import ModuleCard from "@/components/ModuleCard";
+import ModulesGuest from "@/components/ModulesGuest";
 
 const modules = [
-  { title: 'Sécurité & Gouvernance', slug: 'security', description: 'Comptes utilisateurs, rôles, permissions, audit, politiques de sécurité.' },
-  { title: 'PMS cœur', slug: 'pms', description: 'Chambres, tarifs, réservations, folios, disponibilités.' },
-  { title: 'Housekeeping & Maintenance', slug: 'hk', description: 'Ménage, statut des chambres, tickets, interventions.' },
-  { title: 'F&B / POS', slug: 'fnb', description: 'Bar/restaurant, menus, caisses, notes de table, intégration PMS.' },
-  { title: 'Piscine/Spa', slug: 'spa', description: 'Accès, abonnements, rendez-vous, facturation.' },
-  { title: 'Achats/Inventaire/Compta', slug: 'procure', description: 'Fournisseurs, stocks, achats, intégration comptable.' },
-  { title: 'CRM & Fidélité', slug: 'crm', description: 'Profils clients, campagnes, points, avantages.' },
-  { title: 'RH / Personnel', slug: 'hr', description: 'Dossiers employés, horaires, paie (intégrations), rôles internes.' },
-  { title: 'Rapports & BI', slug: 'bi', description: 'Tableaux de bord, KPIs, exports.' },
+  { title: "Securite & Gouvernance", slug: "security", description: "Comptes utilisateurs, roles, permissions, audit, politiques." },
+  { title: "PMS coeur", slug: "pms", description: "Chambres, tarifs, reservations, folios, disponibilites." },
+  { title: "Housekeeping & Maintenance", slug: "hk", description: "Menage, statut des chambres, tickets, interventions." },
+  { title: "F&B / POS", slug: "fnb", description: "Bar/restaurant, menus, caisses, integration PMS." },
+  { title: "Piscine/Spa", slug: "spa", description: "Acces, abonnements, rendez-vous, facturation." },
+  { title: "Achats/Inventaire/Compta", slug: "procure", description: "Fournisseurs, stocks, achats, integration comptable." },
+  { title: "CRM & Fidelite", slug: "crm", description: "Profils clients, campagnes, points, avantages." },
+  { title: "RH / Personnel", slug: "hr", description: "Dossiers employes, horaires, roles internes." },
+  { title: "Rapports & BI", slug: "bi", description: "Tableaux de bord, KPIs, exports." }
 ];
 
 export default function HomePage() {
+  const { session } = useSession();
+
+  // Non connecte -> vue texte (aucun bouton)
+  if (!session.user) {
+    return <ModulesGuest />;
+  }
+
+  // Connecte -> cartes de navigation vers les modules
   return (
     <div className="container">
       <div className="text-center my-4">
         <h1 className="fw-bold">Bienvenue</h1>
-        <p className="text-muted">Sélectionnez un module pour commencer. La visibilité des actions dépendra de vos permissions.</p>
+        <p className="text-muted">Selectionnez un module pour commencer.</p>
       </div>
 
       <div className="row g-3">

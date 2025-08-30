@@ -31,7 +31,7 @@ let refreshPromise: Promise<void> | null = null;
  */
 function createHttp(): AxiosInstance {
   const http = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005/api',
+    baseURL: process.env.NEXT_PUBLIC_API_URL ,
     withCredentials: true // nécessaire pour que le cookie HttpOnly de refresh circule
   });
 
@@ -54,25 +54,26 @@ function createHttp(): AxiosInstance {
       const original = error.config as (InternalAxiosRequestConfig & { __isRetryRequest?: boolean }) | undefined;
       const status = error.response?.status;
 
-      // Si 401 et pas déjà retenté, on essaie de rafraîchir l'access token
       if (status === 401 && original && !original.__isRetryRequest) {
-        // Évite les refresh concurrents : on mutualise via refreshPromise
         if (!refreshPromise) {
           refreshPromise = (async () => {
             try {
-              const r = await http.post('/auth/refresh'); // le cookie HttpOnly est envoyé automatiquement
-              // Hypothèse de réponse: { accessToken: string }
-              const newToken = (r.data as any)?.accessToken ?? (r.data as any)?.access_token ?? null;
+              const r = await http.post('/auth/refresh');
+              const d: any = r.data;
+              const newToken =
+                d?.accessToken ??
+                d?.access_token ??
+                d?.data?.accessToken ??
+                d?.data?.access_token ??
+                d?.token ??
+                null;
               setAccessToken(newToken);
             } finally {
-              // On libère quoi qu'il arrive
               refreshPromise = null;
             }
           })();
         }
         await refreshPromise;
-
-        // Rejoue la requête initiale une seule fois
         original.__isRetryRequest = true;
         if (accessToken) {
           original.headers = original.headers ?? {};
@@ -80,8 +81,6 @@ function createHttp(): AxiosInstance {
         }
         return http(original);
       }
-
-      // Sinon on rejette l'erreur
       return Promise.reject(error);
     }
   );

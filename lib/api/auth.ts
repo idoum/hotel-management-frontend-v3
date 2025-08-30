@@ -2,32 +2,37 @@
  * @file lib/api/auth.ts
  * @description API client for auth endpoints: login, refresh, logout, me, forgot, reset.
  */
-
 import http from "@/lib/http";
+
+function pickAccessToken(obj: any): string | null {
+  if (!obj) return null;
+  return (
+    obj.accessToken ??
+    obj.access_token ??
+    obj.data?.accessToken ??
+    obj.data?.access_token ??
+    obj.token ??
+    null
+  );
+}
 
 type LoginPayload = { email: string; password: string };
 
-type LoginResponse = {
-  accessToken?: string;
-  access_token?: string;
-  user?: unknown;
-};
-
-export async function apiLogin(p: LoginPayload): Promise<LoginResponse> {
+export async function apiLogin(p: LoginPayload): Promise<{ accessToken: string | null; raw: any }> {
   const r = await http.post("/auth/login", p);
-  return r.data;
+  return { accessToken: pickAccessToken(r.data), raw: r.data };
 }
 
-export async function apiRefresh(): Promise<{ accessToken?: string; access_token?: string }> {
+export async function apiRefresh(): Promise<{ accessToken: string | null; raw: any }> {
   const r = await http.post("/auth/refresh");
-  return r.data;
+  return { accessToken: pickAccessToken(r.data), raw: r.data };
 }
 
 export async function apiLogout(): Promise<void> {
   await http.post("/auth/logout");
 }
 
-export async function apiMe(): Promise<unknown> {
+export async function apiMe(): Promise<any> {
   const r = await http.get("/me");
   return r.data?.data ?? r.data;
 }
